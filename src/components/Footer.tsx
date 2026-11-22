@@ -46,7 +46,7 @@ export default function Footer() {
           </div>
         </div>
         <p className="mt-8 text-center text-xs text-slate-500">
-          © {new Date().getFullYear()} {company.legalName}. Semua hak dilindungi.
+          © 2026 {company.legalName}. Semua hak dilindungi.
         </p>
       </footer>
     </>
