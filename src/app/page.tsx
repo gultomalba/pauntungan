@@ -1,5 +1,8 @@
 import Header from "@/components/Header";
 import ProductCatalog from "@/components/ProductCatalog";
+import HowItWorks from "@/components/HowItWorks";
+import Guarantee from "@/components/Guarantee";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
@@ -27,7 +30,10 @@ export default function Home() {
         </section>
 
         <ProductCatalog />
+        <HowItWorks />
+        <Guarantee />
       </main>
+      <Footer />
     </div>
   );
 }
