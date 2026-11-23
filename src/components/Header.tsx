@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Search, Bell, User, Package, ShoppingCart } from "lucide-react";
 
-function IconLink({ label, children }: { label: string; children: React.ReactNode }) {
+function IconLink({ label, href = "#", children }: { label: string; href?: string; children: React.ReactNode }) {
   return (
-    <Link href="#" className="flex flex-col items-center gap-0.5 px-2 text-slate-600 hover:text-emerald-700">
+    <Link href={href} className="flex flex-col items-center gap-0.5 px-2 text-slate-600 hover:text-emerald-700">
       {children}
       <span className="hidden text-[11px] sm:block">{label}</span>
     </Link>
@@ -33,7 +33,7 @@ export default function Header() {
 
         <nav className="ml-auto flex items-center md:ml-0">
           <IconLink label="Notifikasi"><Bell size={20} /></IconLink>
-          <IconLink label="Akun"><User size={20} /></IconLink>
+          <IconLink label="Akun" href="/masuk"><User size={20} /></IconLink>
           <IconLink label="Pesanan"><Package size={20} /></IconLink>
           <IconLink label="Keranjang"><ShoppingCart size={20} /></IconLink>
         </nav>
