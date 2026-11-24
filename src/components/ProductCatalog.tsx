@@ -1,19 +1,37 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
-import { products, formatRupiah } from "@/lib/products";
+import { createClient } from "@/lib/supabase/client";
+import { formatRupiah, tileFor, type Product } from "@/lib/products";
 
 const PAGE_SIZE = 8;
 
 export default function ProductCatalog() {
+  const [items, setItems] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
 
+  useEffect(() => {
+    createClient()
+      .from("products")
+      .select("id, slug, name, price_per_seat, period, badge")
+      .eq("is_active", true)
+      .order("name")
+      .then(({ data, error }) => {
+        if (error) setError("Gagal memuat daftar layanan.");
+        else setItems((data ?? []) as Product[]);
+        setLoading(false);
+      });
+  }, []);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return products.filter((p) => p.name.toLowerCase().includes(q));
-  }, [query]);
+    return items.filter((p) => p.name.toLowerCase().includes(q));
+  }, [items, query]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, totalPages);
@@ -34,28 +52,36 @@ export default function ProductCatalog() {
         <Search size={18} className="text-slate-400" />
       </div>
 
-      {visible.length === 0 ? (
+      {loading ? (
+        <p className="mt-10 text-center text-slate-500">Memuat layanan...</p>
+      ) : error ? (
+        <p className="mt-10 text-center text-red-600">{error}</p>
+      ) : visible.length === 0 ? (
         <p className="mt-10 text-center text-slate-500">Layanan tidak ditemukan.</p>
       ) : (
         <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
           {visible.map((p) => (
-            <a key={p.slug} href="#" className="rounded-xl border border-slate-200 bg-white p-3 transition hover:border-emerald-500 hover:shadow-md">
+            <Link
+              key={p.id}
+              href={`/patungan/${p.slug}`}
+              className="rounded-xl border border-slate-200 bg-white p-3 transition hover:border-emerald-500 hover:shadow-md"
+            >
               <div className="relative">
                 {p.badge && (
                   <span className={`absolute left-1 top-1 z-10 rounded px-1.5 py-0.5 text-[10px] font-semibold ${p.badge === "Populer" ? "bg-sky-100 text-sky-700" : "bg-amber-100 text-amber-700"}`}>
                     {p.badge}
                   </span>
                 )}
-                <div className={`flex h-24 items-center justify-center rounded-lg text-3xl font-extrabold ${p.tile}`}>
+                <div className={`flex h-24 items-center justify-center rounded-lg text-3xl font-extrabold ${tileFor(p.name)}`}>
                   {p.name.charAt(0)}
                 </div>
               </div>
               <p className="mt-3 truncate text-sm font-medium text-slate-800">{p.name}</p>
               <p className="text-sm font-bold text-slate-900">
-                {formatRupiah(p.price)}
-                <span className="text-xs font-normal text-slate-500"> /{p.period}</span>
+                {formatRupiah(p.price_per_seat)}
+                <span className="text-xs font-normal text-slate-500"> /{p.period === "tahun" ? "Tahun" : "Bulan"}</span>
               </p>
-            </a>
+            </Link>
           ))}
         </div>
       )}
