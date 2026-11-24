@@ -1,16 +1,33 @@
-import Link from "next/link";
-import { Search, Bell, User, Package, ShoppingCart } from "lucide-react";
+"use client";
 
-function IconLink({ label, href = "#", children }: { label: string; href?: string; children: React.ReactNode }) {
-  return (
-    <Link href={href} className="flex flex-col items-center gap-0.5 px-2 text-slate-600 hover:text-emerald-700">
-      {children}
-      <span className="hidden text-[11px] sm:block">{label}</span>
-    </Link>
-  );
-}
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Search, Bell, User, Package, LogOut } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+
+const itemClass =
+  "flex flex-col items-center gap-0.5 px-2 text-slate-600 hover:text-emerald-700";
 
 export default function Header() {
+  const router = useRouter();
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setLoggedIn(!!data.user));
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setLoggedIn(!!session?.user);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  async function logout() {
+    await createClient().auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
+
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
@@ -32,10 +49,25 @@ export default function Header() {
         </div>
 
         <nav className="ml-auto flex items-center md:ml-0">
-          <IconLink label="Notifikasi"><Bell size={20} /></IconLink>
-          <IconLink label="Akun" href="/masuk"><User size={20} /></IconLink>
-          <IconLink label="Pesanan"><Package size={20} /></IconLink>
-          <IconLink label="Keranjang"><ShoppingCart size={20} /></IconLink>
+          <Link href="#" className={itemClass}>
+            <Bell size={20} />
+            <span className="hidden text-[11px] sm:block">Notifikasi</span>
+          </Link>
+          <Link href="/pesanan" className={itemClass}>
+            <Package size={20} />
+            <span className="hidden text-[11px] sm:block">Pesanan</span>
+          </Link>
+          {loggedIn ? (
+            <button onClick={logout} className={itemClass}>
+              <LogOut size={20} />
+              <span className="hidden text-[11px] sm:block">Keluar</span>
+            </button>
+          ) : (
+            <Link href="/masuk" className={itemClass}>
+              <User size={20} />
+              <span className="hidden text-[11px] sm:block">Masuk</span>
+            </Link>
+          )}
         </nav>
       </div>
     </header>
