@@ -9,16 +9,18 @@ import { formatRupiah } from "@/lib/products";
 type Row = {
   id: string;
   amount: number;
+  unique_code: number;
   status: string;
   created_at: string;
-  groups: { products: { name: string; slug: string } | null } | null;
+  groups: { products: { name: string } | null } | null;
 };
 
 const statusInfo: Record<string, { text: string; cls: string }> = {
   pending: { text: "Menunggu pembayaran", cls: "bg-amber-100 text-amber-700" },
+  awaiting_verification: { text: "Menunggu verifikasi", cls: "bg-sky-100 text-sky-700" },
   paid: { text: "Dibayar", cls: "bg-emerald-100 text-emerald-700" },
   cancelled: { text: "Dibatalkan", cls: "bg-slate-200 text-slate-600" },
-  refunded: { text: "Dikembalikan", cls: "bg-sky-100 text-sky-700" },
+  refunded: { text: "Dikembalikan", cls: "bg-violet-100 text-violet-700" },
 };
 
 export default function OrdersList() {
@@ -36,7 +38,7 @@ export default function OrdersList() {
     }
     const { data, error } = await supabase
       .from("orders")
-      .select("id, amount, status, created_at, groups(products(name, slug))")
+      .select("id, amount, unique_code, status, created_at, groups(products(name))")
       .order("created_at", { ascending: false });
     if (error) setError("Gagal memuat pesanan.");
     else setRows(data as unknown as Row[]);
@@ -75,26 +77,32 @@ export default function OrdersList() {
       <ul className="mt-6 space-y-3">
         {rows?.map((o) => {
           const info = statusInfo[o.status] ?? { text: o.status, cls: "bg-slate-200 text-slate-600" };
-          const product = o.groups?.products;
           return (
             <li key={o.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4">
               <div>
-                <p className="font-semibold text-slate-900">{product?.name ?? "Layanan"}</p>
+                <p className="font-semibold text-slate-900">{o.groups?.products?.name ?? "Layanan"}</p>
                 <p className="text-xs text-slate-500">
                   {new Date(o.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
                 </p>
               </div>
-              <p className="font-bold text-slate-900">{formatRupiah(o.amount)}</p>
+              <p className="font-bold text-slate-900">{formatRupiah(o.amount + o.unique_code)}</p>
               <span className={`rounded px-2 py-1 text-xs font-semibold ${info.cls}`}>{info.text}</span>
-              {o.status === "pending" && (
-                <button
-                  onClick={() => cancel(o.id)}
-                  disabled={busyId === o.id}
-                  className="text-sm font-semibold text-red-600 hover:underline disabled:opacity-50"
-                >
-                  {busyId === o.id ? "Membatalkan..." : "Batalkan"}
-                </button>
-              )}
+              <div className="flex gap-3">
+                {(o.status === "pending" || o.status === "awaiting_verification") && (
+                  <Link href={`/pesanan/${o.id}/bayar`} className="text-sm font-semibold text-emerald-700 hover:underline">
+                    {o.status === "pending" ? "Bayar" : "Lihat"}
+                  </Link>
+                )}
+                {o.status === "pending" && (
+                  <button
+                    onClick={() => cancel(o.id)}
+                    disabled={busyId === o.id}
+                    className="text-sm font-semibold text-red-600 hover:underline disabled:opacity-50"
+                  >
+                    {busyId === o.id ? "Membatalkan..." : "Batalkan"}
+                  </button>
+                )}
+              </div>
             </li>
           );
         })}

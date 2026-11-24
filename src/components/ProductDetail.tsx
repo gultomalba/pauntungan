@@ -49,14 +49,13 @@ export default function ProductDetail({ slug }: { slug: string }) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setBusy(false); router.push("/masuk"); return; }
 
-    const { error } = await supabase.rpc("create_order", { p_group_id: group.id });
+        const { data: orderId, error } = await supabase.rpc("create_order", { p_group_id: group.id });
     if (error) {
       setMessage({ type: "error", text: error.message });
-    } else {
-      setGroup({ ...group, seats_taken: group.seats_taken + 1 });
-      setMessage({ type: "ok", text: "Pesanan dibuat dengan status menunggu pembayaran. Pembayaran QRIS/VA akan tersedia di tahap berikutnya." });
+      setBusy(false);
+      return;
     }
-    setBusy(false);
+    router.push(`/pesanan/${orderId}/bayar`);
   }
 
   if (state === "loading") return <p className="text-slate-500">Memuat...</p>;
