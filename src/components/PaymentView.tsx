@@ -14,6 +14,7 @@ type Order = {
   status: string;
   expires_at: string | null;
   groups: { products: { name: string } | null } | null;
+  reject_reason: string | null;
 };
 
 export default function PaymentView({ orderId }: { orderId: string }) {
@@ -33,7 +34,7 @@ export default function PaymentView({ orderId }: { orderId: string }) {
     }
     const { data } = await supabase
       .from("orders")
-      .select("id, amount, unique_code, status, expires_at, groups(products(name))")
+      .select("id, amount, unique_code, status, expires_at, reject_reason, groups(products(name))")
       .eq("id", orderId)
       .maybeSingle();
     if (!data) setMissing(true);
@@ -134,6 +135,11 @@ export default function PaymentView({ orderId }: { orderId: string }) {
             Bayar sebelum{" "}
             <b>{new Date(order.expires_at).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}</b>.
             Setelah itu pesanan dibatalkan dan kursi dilepas.
+          </p>
+        )}
+        {order.status === "pending" && order.reject_reason && (
+          <p className="mt-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+            Bukti sebelumnya ditolak: {order.reject_reason}. Silakan kirim ulang.
           </p>
         )}
 
