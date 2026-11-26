@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -31,8 +32,11 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
-        <Link href="/" className="text-xl font-extrabold tracking-tight text-slate-900">
-          pa<span className="text-emerald-600">(un)</span>tungan
+        <Link href="/" className="flex shrink-0 items-center gap-2">
+          <Image src="/icon.png" alt="" width={40} height={40} priority className="h-10 w-10" />
+          <span className="text-xl font-extrabold tracking-tight text-[#024524]">
+          pa<span className="text-[#83cd11]">(un)</span>tungan
+          </span>
         </Link>
 
         <div className="hidden flex-1 md:block">
