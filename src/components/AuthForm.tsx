@@ -9,6 +9,7 @@ export default function AuthForm({ mode }: { mode: "masuk" | "daftar" }) {
   const router = useRouter();
   const isRegister = mode === "daftar";
   const [fullName, setFullName] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,7 +27,7 @@ export default function AuthForm({ mode }: { mode: "masuk" | "daftar" }) {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: fullName } },
+        options: { data: { full_name: fullName, whatsapp } },
       });
       if (error) setError(error.message);
       else if (data.session) {
@@ -57,6 +58,21 @@ export default function AuthForm({ mode }: { mode: "masuk" | "daftar" }) {
         {isRegister && (
           <label className="block text-sm font-medium text-slate-700">
             Nama lengkap
+                    {isRegister && (
+          <label className="block text-sm font-medium text-slate-700">
+            Nomor WhatsApp
+            <input
+              type="tel"
+              required
+              inputMode="tel"
+              placeholder="08xxxxxxxxxx"
+              pattern="[0-9+]{9,16}"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value.trim())}
+              className={input}
+            />
+          </label>
+        )}
             <input required value={fullName} onChange={(e) => setFullName(e.target.value)} className={input} />
           </label>
         )}
