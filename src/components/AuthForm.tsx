@@ -55,26 +55,31 @@ export default function AuthForm({ mode }: { mode: "masuk" | "daftar" }) {
       </p>
 
       <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-        {isRegister && (
-          <label className="block text-sm font-medium text-slate-700">
-            Nama lengkap
-                    {isRegister && (
-          <label className="block text-sm font-medium text-slate-700">
-            Nomor WhatsApp
-            <input
-              type="tel"
-              required
-              inputMode="tel"
-              placeholder="08xxxxxxxxxx"
-              pattern="[0-9+]{9,16}"
-              value={whatsapp}
-              onChange={(e) => setWhatsapp(e.target.value.trim())}
-              className={input}
-            />
-          </label>
-        )}
-            <input required value={fullName} onChange={(e) => setFullName(e.target.value)} className={input} />
-          </label>
+                {isRegister && (
+          <>
+            <label className="block text-sm font-medium text-slate-700">
+              Nomor WhatsApp
+              <input
+                type="tel"
+                required
+                inputMode="tel"
+                placeholder="08xxxxxxxxxx"
+                pattern="[0-9+]{9,16}"
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value.trim())}
+                className={input}
+              />
+            </label>
+            <label className="block text-sm font-medium text-slate-700">
+              Nama lengkap
+              <input
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className={input}
+              />
+            </label>
+          </>
         )}
         <label className="block text-sm font-medium text-slate-700">
           Email
