@@ -5,6 +5,7 @@ export type Product = {
   price_per_seat: number;
   period: "bulan" | "tahun";
   badge: string | null;
+  logo_url: string | null;
 };
 
 export const formatRupiah = (n: number) => "Rp " + n.toLocaleString("id-ID");

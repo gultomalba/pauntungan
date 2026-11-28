@@ -4,9 +4,17 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { formatRupiah, tileFor } from "@/lib/products";
+import { formatRupiah } from "@/lib/products";
+import ProductLogo from "@/components/ProductLogo";
 
-type Detail = { id: string; name: string; description: string | null; price_per_seat: number; period: "bulan" | "tahun" };
+type Detail = {
+  id: string;
+  name: string;
+  description: string | null;
+  price_per_seat: number;
+  period: "bulan" | "tahun";
+  logo_url: string | null;
+};
 type Group = { id: string; seats_total: number; seats_taken: number };
 
 export default function ProductDetail({ slug }: { slug: string }) {
@@ -15,18 +23,21 @@ export default function ProductDetail({ slug }: { slug: string }) {
   const [group, setGroup] = useState<Group | null>(null);
   const [state, setState] = useState<"loading" | "notfound" | "ready">("loading");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
     (async () => {
       const { data: p } = await supabase
         .from("products")
-        .select("id, name, description, price_per_seat, period")
+        .select("id, name, description, price_per_seat, period, logo_url")
         .eq("slug", slug)
         .eq("is_active", true)
         .maybeSingle();
-      if (!p) { setState("notfound"); return; }
+      if (!p) {
+        setState("notfound");
+        return;
+      }
       const { data: g } = await supabase
         .from("groups")
         .select("id, seats_total, seats_taken")
@@ -46,12 +57,18 @@ export default function ProductDetail({ slug }: { slug: string }) {
     setBusy(true);
     setMessage(null);
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setBusy(false); router.push("/masuk"); return; }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setBusy(false);
+      router.push("/masuk");
+      return;
+    }
 
-        const { data: orderId, error } = await supabase.rpc("create_order", { p_group_id: group.id });
+    const { data: orderId, error } = await supabase.rpc("create_order", { p_group_id: group.id });
     if (error) {
-      setMessage({ type: "error", text: error.message });
+      setMessage(error.message);
       setBusy(false);
       return;
     }
@@ -63,7 +80,9 @@ export default function ProductDetail({ slug }: { slug: string }) {
     return (
       <div className="text-center">
         <p className="text-slate-600">Layanan tidak ditemukan.</p>
-        <Link href="/#katalog" className="mt-3 inline-block font-semibold text-emerald-700 hover:underline">Kembali ke daftar layanan</Link>
+        <Link href="/#katalog" className="mt-3 inline-block font-semibold text-emerald-700 hover:underline">
+          Kembali ke daftar layanan
+        </Link>
       </div>
     );
   }
@@ -73,26 +92,34 @@ export default function ProductDetail({ slug }: { slug: string }) {
 
   return (
     <div className="grid gap-8 md:grid-cols-2">
-      <div className={`flex h-56 items-center justify-center rounded-2xl text-7xl font-extrabold ${tileFor(product.name)}`}>
-        {product.name.charAt(0)}
-      </div>
+      <ProductLogo name={product.name} logoUrl={product.logo_url} size="lg" />
 
       <div>
-        <Link href="/#katalog" className="text-sm text-slate-500 hover:text-emerald-700">&larr; Semua layanan</Link>
+        <Link href="/#katalog" className="text-sm text-slate-500 hover:text-emerald-700">
+          &larr; Semua layanan
+        </Link>
         <h1 className="mt-2 text-2xl font-extrabold text-slate-900">{product.name}</h1>
         <p className="mt-2 text-3xl font-extrabold text-slate-900">
           {formatRupiah(product.price_per_seat)}
-          <span className="text-base font-normal text-slate-500"> /{product.period === "tahun" ? "tahun" : "bulan"} per orang</span>
+          <span className="text-base font-normal text-slate-500">
+            {" "}
+            /{product.period === "tahun" ? "tahun" : "bulan"} per orang
+          </span>
         </p>
 
         <p className="mt-4 text-sm text-slate-600">
-          {product.description ?? "Patungan langganan. Pesan kursimu, bayar bagianmu, dan akses dikirim setelah grup terisi dan diaktifkan."}
+          {product.description ??
+            "Patungan langganan. Pesan kursimu, bayar bagianmu, dan akses dikirim setelah grup terisi dan diaktifkan."}
         </p>
 
         <div className="mt-4 rounded-lg bg-slate-100 px-4 py-3 text-sm text-slate-700">
-          {group
-            ? <>Sisa kursi di grup ini: <b>{seatsLeft}</b> dari {group.seats_total}</>
-            : "Belum ada grup yang dibuka untuk layanan ini."}
+          {group ? (
+            <>
+              Sisa kursi di grup ini: <b>{seatsLeft}</b> dari {group.seats_total}
+            </>
+          ) : (
+            "Belum ada grup yang dibuka untuk layanan ini."
+          )}
         </div>
 
         <button
@@ -103,11 +130,7 @@ export default function ProductDetail({ slug }: { slug: string }) {
           {busy ? "Memproses..." : canOrder ? "Pesan 1 kursi" : "Kursi penuh"}
         </button>
 
-        {message && (
-          <p className={`mt-3 rounded px-3 py-2 text-sm ${message.type === "ok" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
-            {message.text}
-          </p>
-        )}
+        {message && <p className="mt-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{message}</p>}
       </div>
     </div>
   );

@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { formatRupiah, tileFor, type Product } from "@/lib/products";
+import { formatRupiah, type Product } from "@/lib/products";
+import ProductLogo from "@/components/ProductLogo";
 
 const PAGE_SIZE = 24;
 
@@ -34,8 +35,9 @@ export default function ProductCatalog() {
       const from = (page - 1) * PAGE_SIZE;
       let q = createClient()
         .from("products")
-        .select("id, slug, name, price_per_seat, period, badge", { count: "exact" })
+        .select("id, slug, name, price_per_seat, period, badge, logo_url", { count: "exact" })
         .eq("is_active", true)
+        .order("is_popular", { ascending: false })
         .order("name")
         .range(from, from + PAGE_SIZE - 1);
       if (search) q = q.ilike("name", `%${search.replace(/[%_\\]/g, " ")}%`);
@@ -85,18 +87,12 @@ export default function ProductCatalog() {
               className="rounded-xl border border-slate-200 bg-white p-3 transition hover:border-emerald-500 hover:shadow-md"
             >
               <div className="relative">
-                {p.badge && (
-                  <span
-                    className={`absolute left-1 top-1 z-10 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
-                      p.badge === "Populer" ? "bg-sky-100 text-sky-700" : "bg-amber-100 text-amber-700"
-                    }`}
-                  >
-                    {p.badge}
+                {p.badge === "Populer" && (
+                  <span className="absolute left-1 top-1 z-10 rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold text-sky-700">
+                    Populer
                   </span>
                 )}
-                <div className={`flex h-24 items-center justify-center rounded-lg text-3xl font-extrabold ${tileFor(p.name)}`}>
-                  {p.name.charAt(0)}
-                </div>
+                <ProductLogo name={p.name} logoUrl={p.logo_url} />
               </div>
               <p className="mt-3 truncate text-sm font-medium text-slate-800">{p.name}</p>
               <p className="text-sm font-bold text-slate-900">
